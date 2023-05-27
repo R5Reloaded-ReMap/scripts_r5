@@ -57,6 +57,7 @@ const string MEDKIT_HEAL_SFX  = "Lifeline_Drone_Healing_1P"
 // Respawnable Boost
 const asset BOOST_MDL = $"mdl/fx/plasma_sphere_01.rmdl"
 const asset BOOST_CIRCLE = $"mdl/fx/ar_edge_sphere_512.rmdl"
+const asset BOOST_SPRINT_FP = $"P_sprint_FP"
 
 const bool IS_FLOWSTATE_SCRIPT = false
 
@@ -72,6 +73,7 @@ void function MapEditor_Init()
 
     PrecacheModel( BOOST_MDL )
     PrecacheModel( BOOST_CIRCLE )
+    PrecacheParticleSystem( BOOST_SPRINT_FP )
 
     MapTriggers_Init()
     AddCallback_EntitiesDidLoad( ReMapDidLoad )
@@ -126,9 +128,9 @@ void function MapTriggers_Init()
 
 void function ReMapDidLoad()
 {
-    ReMapCreateRespawnableMedKit( < 3243, 5408, -4296 >, 3, 3, true )
-    ReMapCreateRespawnableMedKit( < 3143, 5408, -4296 >, 3, 3, false )
-    //ReMapCreateSpeedBoost( < 3243, 5408, -4296 >, < 3, 162, 255 >, 5.0, 0.35, 3.5, 0.5 )
+    //ReMapCreateRespawnableMedKit( < 3243, 5408, -4296 >, 3, 3, true )
+    //ReMapCreateRespawnableMedKit( < 3143, 5408, -4296 >, 3, 3, false )
+    ReMapCreateSpeedBoost( < 3243, 5408, -4296 >, < 3, 162, 255 >, 5.0, 0.35, 3.5, 0.5 )
 }
 
 entity function CreateWallTrigger( vector origin , int type = 0, float radius = 30000 , float height = 2000, bool debugdraw = false)
@@ -960,6 +962,8 @@ void function CreateBoostTrigger( RespawnableBoost instance )
             {
                 StatusEffect_AddTimed( touchingEnt, eStatusEffect.speed_boost, instance.strengh, instance.boostDuration, instance.fadeTime )
 
+                thread PlayFxOnPlayer( touchingEnt, instance.boostDuration )
+
                 if ( IsValid( instance.boost ) ) instance.boost.Destroy()
 
                 wait instance.respawnTime
@@ -970,6 +974,15 @@ void function CreateBoostTrigger( RespawnableBoost instance )
         }
         wait 0.1
     }
+}
+
+void function PlayFxOnPlayer( entity player, float time )
+{
+    entity fx = PlayLoopFXOnEntity( BOOST_SPRINT_FP, player )
+
+        wait time
+
+    if ( IsValid( fx ) ) fx.Destroy()
 }
 
 
