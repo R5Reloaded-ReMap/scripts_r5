@@ -838,7 +838,6 @@ void function OnProgressiveHealPlayer( entity touchingEnt, RespawnableMedKit ins
 
 bool function IsTakingFire( int startingHeal, int currentHeal )
 {
-    printt( currentHeal + " < " + startingHeal )
     return currentHeal < startingHeal
 }
 
