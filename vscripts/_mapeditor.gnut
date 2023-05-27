@@ -743,7 +743,7 @@ void function OnTouchMedKit( RespawnableMedKit instance )
                 {
                     while ( IsValid( touchingEnt ) )
                     {
-                        if ( touchingEnt.GetHealth() == touchingEnt.GetMaxHealth() ) break
+                        if ( touchingEnt.GetHealth() == touchingEnt.GetMaxHealth() || !IsValid( touchingEnt ) ) break
                         
                         if ( IsValid( touchingEnt ) ) touchingEnt.SetHealth( min( touchingEnt.GetMaxHealth(), touchingEnt.GetHealth() + 1 ) )
 
@@ -752,9 +752,10 @@ void function OnTouchMedKit( RespawnableMedKit instance )
 
                     while ( IsValid( touchingEnt ) )
                     {
-                        if ( touchingEnt.GetShieldHealth() == touchingEnt.GetShieldHealthMax() ) break
+                        if ( touchingEnt.GetShieldHealth() == touchingEnt.GetShieldHealthMax() || !IsValid( touchingEnt ) ) break
                         
                         if ( IsValid( touchingEnt ) ) touchingEnt.SetShieldHealth( min( touchingEnt.GetShieldHealthMax(), touchingEnt.GetShieldHealth() + 1 ) )
+                        
                         wait 0.01
                     }
                 }
