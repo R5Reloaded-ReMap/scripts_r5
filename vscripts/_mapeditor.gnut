@@ -126,8 +126,8 @@ void function MapTriggers_Init()
 
 void function ReMapDidLoad()
 {
-    ReMapCreateRespawnableMedKit( < 3243, 5408, -4296 >, 2, 2, true )
-    ReMapCreateRespawnableMedKit( < 3143, 5408, -4296 >, 2, 2, false )
+    ReMapCreateRespawnableMedKit( < 3243, 5408, -4296 >, 3, 3, true )
+    ReMapCreateRespawnableMedKit( < 3143, 5408, -4296 >, 3, 3, false )
     //ReMapCreateSpeedBoost( < 3243, 5408, -4296 >, < 3, 162, 255 >, 5.0, 0.35, 3.5, 0.5 )
 }
 
@@ -741,23 +741,7 @@ void function OnTouchMedKit( RespawnableMedKit instance )
 
                 if ( instance.progressive )
                 {
-                    while ( IsValid( touchingEnt ) )
-                    {
-                        if ( touchingEnt.GetHealth() == touchingEnt.GetMaxHealth() || !IsValid( touchingEnt ) ) break
-                        
-                        if ( IsValid( touchingEnt ) ) touchingEnt.SetHealth( min( touchingEnt.GetMaxHealth(), touchingEnt.GetHealth() + 1 ) )
-
-                        wait 0.01
-                    }
-
-                    while ( IsValid( touchingEnt ) )
-                    {
-                        if ( touchingEnt.GetShieldHealth() == touchingEnt.GetShieldHealthMax() || !IsValid( touchingEnt ) ) break
-                        
-                        if ( IsValid( touchingEnt ) ) touchingEnt.SetShieldHealth( min( touchingEnt.GetShieldHealthMax(), touchingEnt.GetShieldHealth() + 1 ) )
-                        
-                        wait 0.01
-                    }
+                    waitthread OnProgressiveHealPlayer( touchingEnt, instance )
                 }
                 else
                 {
@@ -781,6 +765,81 @@ void function OnTouchMedKit( RespawnableMedKit instance )
         
         wait 0.01
     }
+}
+
+void function OnProgressiveHealPlayer( entity touchingEnt, RespawnableMedKit instance )
+{
+    bool hasLowShield = touchingEnt.GetShieldHealth() < touchingEnt.GetShieldHealthMax()
+    bool hasLowHealth = touchingEnt.GetHealth() < touchingEnt.GetMaxHealth()
+
+    int HealthRemaining = touchingEnt.GetMaxHealth() - touchingEnt.GetHealth()
+    int SheildRemaining = touchingEnt.GetShieldHealthMax() - touchingEnt.GetShieldHealth()
+
+    int health = touchingEnt.GetHealth()
+    int shield = touchingEnt.GetShieldHealth()
+
+    bool isTakingFire = false
+
+    //Heal health first
+    if( hasLowHealth )
+    {
+        float healWait = ( instance.healTime / 2 ) / HealthRemaining
+        while( hasLowHealth )
+        {
+            if ( IsTakingFire( health, touchingEnt.GetHealth() ) || IsTakingFire( shield, touchingEnt.GetShieldHealth() ) )
+            {
+                isTakingFire = true; break
+            }
+            else
+            {
+                health = touchingEnt.GetHealth()
+                shield = touchingEnt.GetShieldHealth()
+            }
+
+            hasLowHealth = touchingEnt.GetHealth() < touchingEnt.GetMaxHealth()
+
+            if( touchingEnt.GetHealth() + 1 > touchingEnt.GetMaxHealth() )
+            {
+                touchingEnt.SetHealth( touchingEnt.GetMaxHealth() )
+            }
+            else touchingEnt.SetHealth( touchingEnt.GetHealth() + 1 )
+
+            wait healWait
+        }
+    }
+
+    //now gen sheild
+    if( hasLowShield && !isTakingFire )
+    {
+        float sheildWait = ( instance.healTime / 2 ) / SheildRemaining
+        while( hasLowShield )
+        {
+            if ( IsTakingFire( shield, touchingEnt.GetShieldHealth() ) )
+            {
+                isTakingFire = true; break
+            }
+            else
+            {
+                shield = touchingEnt.GetShieldHealth()
+            }
+
+            hasLowShield = touchingEnt.GetShieldHealth() < touchingEnt.GetShieldHealthMax()
+
+            if( touchingEnt.GetShieldHealth() + 1 > touchingEnt.GetShieldHealthMax() )
+            {
+                touchingEnt.SetShieldHealth( touchingEnt.GetShieldHealthMax() )
+            }
+            else touchingEnt.SetShieldHealth( touchingEnt.GetShieldHealth() + 1 )
+
+            wait sheildWait
+        }
+    }
+}
+
+bool function IsTakingFire( int startingHeal, int currentHeal )
+{
+    printt( currentHeal + " < " + startingHeal )
+    return currentHeal < startingHeal
 }
 
 void function OnMedkitPickup( RespawnableMedKit instance )
