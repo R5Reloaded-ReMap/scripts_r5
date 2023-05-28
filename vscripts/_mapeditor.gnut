@@ -158,10 +158,7 @@ void function MapTriggers_Init()
 
 void function ReMapDidLoad()
 {
-    ReMapCreateRespawnableHeal( < 7672.63867, 4941.25586, -4303.96875 >, eReMapHealType.HealSmall, 4, 4, 25, false )
-    ReMapCreateRespawnableHeal( < 7672.63867, 4641.25586, -4303.96875 >, eReMapHealType.ShieldSmall, 4, 4, 25, false )
-    ReMapCreateRespawnableHeal( < 8000.63867, 4941.25586, -4303.96875 >, eReMapHealType.HealSmall, 4, 4, 25, true )
-    ReMapCreateRespawnableHeal( < 8000.63867, 4641.25586, -4303.96875 >, eReMapHealType.ShieldSmall, 4, 4, 25, true )
+    
 }
 
 entity function CreateWallTrigger( vector origin , int type = 0, float radius = 30000 , float height = 2000, bool debugdraw = false)
