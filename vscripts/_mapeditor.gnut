@@ -166,7 +166,7 @@ void function MapTriggers_Init()
 
 void function ReMapDidLoad()
 {
-    ReMapCreateCamera( < 9380, 26480, 5660 >/* < 2600, 4800, -4100 > */, < 0, 180, 0 >, 20, 40, 40, 4, 2, false )
+    
 }
 
 entity function CreateWallTrigger( vector origin , int type = 0, float radius = 30000 , float height = 2000, bool debugdraw = false)
