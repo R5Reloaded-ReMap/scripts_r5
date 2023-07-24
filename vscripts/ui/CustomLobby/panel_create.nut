@@ -5,20 +5,14 @@ global function InitR5RDescPanel
 global function SetSelectedServerMap
 global function SetSelectedServerPlaylist
 global function SetSelectedServerVis
-global function HideAllCreateServerPanels
 global function OnCreateMatchOpen
 
 struct
 {
 	var menu
 	var panel
-
-	string tempservername
-	string tempserverdesc
-
 	var namepanel
 	var descpanel
-
 	array<var> panels
 } file
 
@@ -31,32 +25,19 @@ global struct ServerStruct
 	int svVisibility
 }
 
-global struct privatematchmenusopen
-{
-    bool maps_open = false
-    bool playlists_open = false
-    bool vis_open = false
-    bool name_open = false
-    bool desc_open = false
-}
-
 global ServerStruct ServerSettings
-global privatematchmenusopen PMMenusOpen
+global bool pmatch_MenuOpen = false
 
 void function InitR5RNamePanel( var panel )
 {
 	file.namepanel = panel
-
 	AddButtonEventHandler( Hud_GetChild( panel, "BtnSaveName"), UIE_CLICK, UpdateServerName )
-	AddButtonEventHandler( Hud_GetChild( panel, "BtnServerName"), UIE_CHANGE, TempSaveNameChanges )
 }
 
 void function InitR5RDescPanel( var panel )
 {
 	file.descpanel = panel
-
 	AddButtonEventHandler( Hud_GetChild( panel, "BtnSaveDesc"), UIE_CLICK, UpdateServerDesc )
-	AddButtonEventHandler( Hud_GetChild( panel, "BtnServerDesc"), UIE_CHANGE, TempSaveDescChanges )
 }
 
 void function InitCreatePanel( var panel )
@@ -85,11 +66,13 @@ void function InitCreatePanel( var panel )
 	ServerSettings.svMapName = "mp_rr_canyonlands_64k_x_64k"
 	ServerSettings.svPlaylist = "survival_dev"
 	ServerSettings.svVisibility = eServerVisibility.OFFLINE
+}
 
-	file.tempservername = ServerSettings.svServerName
-	file.tempserverdesc = ServerSettings.svServerDesc
+void function OnCreateMatchOpen()
+{
+	RefreshUIPlaylists()
+	RefreshUIMaps()
 
-	//Setup Default Server Config
 	Hud_SetText(Hud_GetChild( file.panel, "PlaylistInfoEdit" ), GetUIPlaylistName(ServerSettings.svPlaylist))
 	RuiSetImage( Hud_GetRui( Hud_GetChild( file.panel, "ServerMapImg" ) ), "loadscreenImage", GetUIMapAsset( ServerSettings.svMapName ) )
 	Hud_SetText(Hud_GetChild( file.panel, "VisInfoEdit" ), GetUIVisibilityName(ServerSettings.svVisibility))
@@ -100,39 +83,29 @@ void function OpenSelectedPanel( var button )
 {
 	//Show panel depending on script id
 	ShowSelectedPanel( file.panels[Hud_GetScriptID( button ).tointeger()] )
+	pmatch_MenuOpen = true
 
 	switch (Hud_GetScriptID( button ).tointeger())
     {
-        case 0:
-                PMMenusOpen.maps_open = true
-            break;
-        case 1:
-                PMMenusOpen.playlists_open = true
-            break;
-        case 2:
-                PMMenusOpen.vis_open = true
-            break;
         case 3:
-                PMMenusOpen.name_open = true
                 Hud_SetText( Hud_GetChild( file.namepanel, "BtnServerName" ), ServerSettings.svServerName )
             break;
         case 4:
-                PMMenusOpen.desc_open = true
                 Hud_SetText( Hud_GetChild( file.descpanel, "BtnServerDesc" ), ServerSettings.svServerDesc )
             break;
-        
     }
 }
 
 void function StartNewGame( var button )
-{	
-	//Start thread for starting the server
+{
+#if LISTEN_SERVER
 	CreateServer(ServerSettings.svServerName, ServerSettings.svServerDesc, ServerSettings.svMapName, ServerSettings.svPlaylist, ServerSettings.svVisibility)
+#endif // LISTEN_SERVER
 }
 
 void function SetSelectedServerMap( string map )
 {
-	PMMenusOpen.maps_open = false
+	pmatch_MenuOpen = false
 
 	//set map
 	ServerSettings.svMapName = map
@@ -146,7 +119,7 @@ void function SetSelectedServerMap( string map )
 
 void function SetSelectedServerPlaylist( string playlist )
 {
-	PMMenusOpen.playlists_open = false
+	pmatch_MenuOpen = false
 
 	//set playlist
 	ServerSettings.svPlaylist = playlist
@@ -177,7 +150,7 @@ void function SetSelectedServerPlaylist( string playlist )
 
 void function SetSelectedServerVis( int vis )
 {
-	PMMenusOpen.vis_open = false
+	pmatch_MenuOpen = false
 
 	//set visibility
 	ServerSettings.svVisibility = vis
@@ -200,53 +173,22 @@ void function ShowSelectedPanel(var panel)
 	Hud_SetVisible( panel, true )
 }
 
-void function HideAllCreateServerPanels()
-{
-	//Hide all panels
-	foreach ( p in file.panels ) {
-		Hud_SetVisible( p, false )
-	}
-}
-
 void function UpdateServerName( var button )
 {
-	PMMenusOpen.name_open = false
+	pmatch_MenuOpen = false
 
-    ServerSettings.svServerName = file.tempservername
+    ServerSettings.svServerName = Hud_GetUTF8Text( Hud_GetChild( file.namepanel, "BtnServerName" ) )
 
 	Hud_SetVisible( file.namepanel, false )
 
 	Hud_SetText(Hud_GetChild( file.panel, "MapServerNameInfoEdit" ), ServerSettings.svServerName)
 }
 
-void function TempSaveNameChanges( var button )
-{
-	file.tempservername = Hud_GetUTF8Text( Hud_GetChild( file.namepanel, "BtnServerName" ) )
-}
-
 void function UpdateServerDesc( var button )
 {
-	PMMenusOpen.desc_open = false
+	pmatch_MenuOpen = false
 
-    ServerSettings.svServerDesc = file.tempserverdesc
+    ServerSettings.svServerDesc = Hud_GetUTF8Text( Hud_GetChild( file.descpanel, "BtnServerDesc" ) )
 
 	Hud_SetVisible( file.descpanel, false )
-}
-
-void function TempSaveDescChanges( var button )
-{
-	file.tempserverdesc = Hud_GetUTF8Text( Hud_GetChild( file.descpanel, "BtnServerDesc" ) )
-}
-
-void function OnCreateMatchOpen()
-{
-	RefreshUIPlaylists()
-	RefreshUIMaps()
-
-	file.tempservername = ServerSettings.svServerName
-	file.tempserverdesc = ServerSettings.svServerDesc
-	Hud_SetText(Hud_GetChild( file.panel, "PlaylistInfoEdit" ), GetUIPlaylistName(ServerSettings.svPlaylist))
-	RuiSetImage( Hud_GetRui( Hud_GetChild( file.panel, "ServerMapImg" ) ), "loadscreenImage", GetUIMapAsset( ServerSettings.svMapName ) )
-	Hud_SetText(Hud_GetChild( file.panel, "VisInfoEdit" ), GetUIVisibilityName(ServerSettings.svVisibility))
-	Hud_SetText(Hud_GetChild( file.panel, "MapServerNameInfoEdit" ), ServerSettings.svServerName)
 }
